@@ -1,0 +1,39 @@
+
+[project]
+name = "paperless-ngx"
+requires-python = ">=3.9"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "--pythonwarnings=all --cov --cov-report=html --cov-report=json --numprocesses auto --quiet --durations=50"
+DJANGO_SETTINGS_MODULE = "paperless.settings"
+env = [
+  "PAPERLESS_DISABLE_DBHANDLER=true"
+]
+
+[tool.coverage.run]
+source = [
+	"./"
+]
+omit = [
+	"*/tests/*",
+	"manage.py",
+	"paperless/workers.py",
+	"paperless/wsgi.py",
+	"paperless/auth.py"
+]
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main", "numpy.typing.mypy_plugin"]
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+exclude = [
+	".*/tests/.*"
+]
+
+[tool.django-stubs]
+django_settings_module = "paperless.settings"
