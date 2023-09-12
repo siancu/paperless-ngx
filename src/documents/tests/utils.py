@@ -1,3 +1,4 @@
+import os
 import shutil
 import tempfile
 import time
@@ -143,6 +144,20 @@ def util_call_with_backoff(
         pytest.skip("Repeated HTTP 50x for service")  # pragma: no cover
 
     return succeeded, result
+
+
+def fake_magic_from_file(file, mime=False):
+    if mime:
+        if os.path.splitext(file)[1] == ".pdf":
+            return "application/pdf"
+        elif os.path.splitext(file)[1] == ".png":
+            return "image/png"
+        elif os.path.splitext(file)[1] == ".webp":
+            return "image/webp"
+        else:
+            return "unknown"
+    else:
+        return "A verbose string that describes the contents of the file"
 
 
 class DirectoriesMixin:

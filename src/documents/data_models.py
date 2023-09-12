@@ -3,6 +3,8 @@ import datetime
 import enum
 from pathlib import Path
 from typing import Optional
+from typing import Protocol
+from typing import Union
 
 import magic
 
@@ -44,9 +46,9 @@ class ConsumableDocument:
 
     source: DocumentSource
     original_file: Path
-    mime_type: str = dataclasses.field(init=False, default=None)
+    mime_type: str = dataclasses.field(init=False, default="")
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """
         After a dataclass is initialized, this is called to finalize some data
         1. Make sure the original path is an absolute, fully qualified path
@@ -59,3 +61,12 @@ class ConsumableDocument:
         # Get the file type once at init
         # Note this function isn't called when the object is unpickled
         self.mime_type = magic.from_file(self.original_file, mime=True)
+
+
+class SimpleProgressCallback(Protocol):
+    def __call__(
+        self,
+        current_progress: Union[float, int],
+        max_progress: Union[float, int],
+    ) -> None:
+        pass

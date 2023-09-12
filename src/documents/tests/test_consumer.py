@@ -27,6 +27,7 @@ from documents.parsers import DocumentParser
 from documents.parsers import ParseError
 from documents.tasks import sanity_check
 from documents.tests.utils import FileSystemAssertsMixin
+from documents.tests.utils import fake_magic_from_file
 
 from .utils import DirectoriesMixin
 
@@ -219,21 +220,7 @@ class FaultyGenericExceptionParser(DocumentParser):
         raise Exception("Generic exception.")
 
 
-def fake_magic_from_file(file, mime=False):
-    if mime:
-        if os.path.splitext(file)[1] == ".pdf":
-            return "application/pdf"
-        elif os.path.splitext(file)[1] == ".png":
-            return "image/png"
-        elif os.path.splitext(file)[1] == ".webp":
-            return "image/webp"
-        else:
-            return "unknown"
-    else:
-        return "A verbose string that describes the contents of the file"
-
-
-@mock.patch("documents.consumer.magic.from_file", fake_magic_from_file)
+@mock.patch("documents.data_models.magic.from_file", fake_magic_from_file)
 class TestConsumer(DirectoriesMixin, FileSystemAssertsMixin, TestCase):
     def _assert_first_last_send_progress(
         self,
@@ -332,7 +319,7 @@ class TestConsumer(DirectoriesMixin, FileSystemAssertsMixin, TestCase):
         rough_create_date_local = timezone.localtime(timezone.now())
 
         # Consume the file
-        document = self.consumer.try_consume_file(filename)
+        document = self.consumer.try_consume_file(filename, "application/pdf")
 
         self.assertEqual(document.content, "The Text")
         self.assertEqual(
@@ -383,7 +370,7 @@ class TestConsumer(DirectoriesMixin, FileSystemAssertsMixin, TestCase):
 
         self.assertIsFile(shadow_file)
 
-        document = self.consumer.try_consume_file(filename)
+        document = self.consumer.try_consume_file(filename, "application/pdf")
 
         self.assertIsFile(document.source_path)
 
@@ -396,6 +383,7 @@ class TestConsumer(DirectoriesMixin, FileSystemAssertsMixin, TestCase):
 
         document = self.consumer.try_consume_file(
             filename,
+            "application/pdf",
             override_filename=override_filename,
         )
 
@@ -406,6 +394,7 @@ class TestConsumer(DirectoriesMixin, FileSystemAssertsMixin, TestCase):
     def testOverrideTitle(self):
         document = self.consumer.try_consume_file(
             self.get_test_file(),
+            "application/pdf",
             override_title="Override Title",
         )
         self.assertEqual(document.title, "Override Title")
@@ -416,6 +405,7 @@ class TestConsumer(DirectoriesMixin, FileSystemAssertsMixin, TestCase):
 
         document = self.consumer.try_consume_file(
             self.get_test_file(),
+            "application/pdf",
             override_correspondent_id=c.pk,
         )
         self.assertEqual(document.correspondent.id, c.id)
@@ -426,6 +416,7 @@ class TestConsumer(DirectoriesMixin, FileSystemAssertsMixin, TestCase):
 
         document = self.consumer.try_consume_file(
             self.get_test_file(),
+            "application/pdf",
             override_document_type_id=dt.pk,
         )
         self.assertEqual(document.document_type.id, dt.id)
@@ -437,6 +428,7 @@ class TestConsumer(DirectoriesMixin, FileSystemAssertsMixin, TestCase):
         t3 = Tag.objects.create(name="t3")
         document = self.consumer.try_consume_file(
             self.get_test_file(),
+            "application/pdf",
             override_tag_ids=[t1.id, t3.id],
         )
 
@@ -451,37 +443,40 @@ class TestConsumer(DirectoriesMixin, FileSystemAssertsMixin, TestCase):
             "File not found",
             self.consumer.try_consume_file,
             "non-existing-file",
+            "application/pdf",
         )
 
         self._assert_first_last_send_progress(last_status="FAILED")
 
     def testDuplicates1(self):
-        self.consumer.try_consume_file(self.get_test_file())
+        self.consumer.try_consume_file(self.get_test_file(), "application/pdf")
 
         self.assertRaisesMessage(
             ConsumerError,
             "It is a duplicate",
             self.consumer.try_consume_file,
             self.get_test_file(),
+            "application/pdf",
         )
 
         self._assert_first_last_send_progress(last_status="FAILED")
 
     def testDuplicates2(self):
-        self.consumer.try_consume_file(self.get_test_file())
+        self.consumer.try_consume_file(self.get_test_file(), "application/pdf")
 
         self.assertRaisesMessage(
             ConsumerError,
             "It is a duplicate",
             self.consumer.try_consume_file,
             self.get_test_archive_file(),
+            "application/pdf",
         )
 
         self._assert_first_last_send_progress(last_status="FAILED")
 
     def testDuplicates3(self):
-        self.consumer.try_consume_file(self.get_test_archive_file())
-        self.consumer.try_consume_file(self.get_test_file())
+        self.consumer.try_consume_file(self.get_test_archive_file(), "application/pdf")
+        self.consumer.try_consume_file(self.get_test_file(), "application/pdf")
 
     @mock.patch("documents.parsers.document_consumer_declaration.send")
     def testNoParsers(self, m):
@@ -492,6 +487,7 @@ class TestConsumer(DirectoriesMixin, FileSystemAssertsMixin, TestCase):
             "sample.pdf: Unsupported mime type application/pdf",
             self.consumer.try_consume_file,
             self.get_test_file(),
+            "application/pdf",
         )
 
         self._assert_first_last_send_progress(last_status="FAILED")
@@ -514,6 +510,7 @@ class TestConsumer(DirectoriesMixin, FileSystemAssertsMixin, TestCase):
             "sample.pdf: Error occurred while consuming document sample.pdf: Does not compute.",
             self.consumer.try_consume_file,
             self.get_test_file(),
+            "application/pdf",
         )
 
         self._assert_first_last_send_progress(last_status="FAILED")
@@ -536,6 +533,7 @@ class TestConsumer(DirectoriesMixin, FileSystemAssertsMixin, TestCase):
             "sample.pdf: Unexpected error while consuming document sample.pdf: Generic exception.",
             self.consumer.try_consume_file,
             self.get_test_file(),
+            "application/pdf",
         )
 
         self._assert_first_last_send_progress(last_status="FAILED")
@@ -550,6 +548,7 @@ class TestConsumer(DirectoriesMixin, FileSystemAssertsMixin, TestCase):
             "sample.pdf: The following error occurred while storing document sample.pdf after parsing: NO.",
             self.consumer.try_consume_file,
             filename,
+            "application/pdf",
         )
 
         self._assert_first_last_send_progress(last_status="FAILED")
@@ -564,7 +563,11 @@ class TestConsumer(DirectoriesMixin, FileSystemAssertsMixin, TestCase):
     def testFilenameHandling(self):
         filename = self.get_test_file()
 
-        document = self.consumer.try_consume_file(filename, override_title="new docs")
+        document = self.consumer.try_consume_file(
+            filename,
+            "application/pdf",
+            override_title="new docs",
+        )
 
         self.assertEqual(document.title, "new docs")
         self.assertEqual(document.filename, "none/new docs.pdf")
@@ -588,7 +591,11 @@ class TestConsumer(DirectoriesMixin, FileSystemAssertsMixin, TestCase):
 
         Tag.objects.create(name="test", is_inbox_tag=True)
 
-        document = self.consumer.try_consume_file(filename, override_title="new docs")
+        document = self.consumer.try_consume_file(
+            filename,
+            "application/pdf",
+            override_title="new docs",
+        )
 
         self.assertEqual(document.title, "new docs")
         self.assertIsNotNone(document.title)
@@ -615,7 +622,10 @@ class TestConsumer(DirectoriesMixin, FileSystemAssertsMixin, TestCase):
         m.return_value.predict_document_type.return_value = dtype.pk
         m.return_value.predict_tags.return_value = [t1.pk]
 
-        document = self.consumer.try_consume_file(self.get_test_file())
+        document = self.consumer.try_consume_file(
+            self.get_test_file(),
+            "application/pdf",
+        )
 
         self.assertEqual(document.correspondent, correspondent)
         self.assertEqual(document.document_type, dtype)
@@ -628,7 +638,7 @@ class TestConsumer(DirectoriesMixin, FileSystemAssertsMixin, TestCase):
     def test_delete_duplicate(self):
         dst = self.get_test_file()
         self.assertIsFile(dst)
-        doc = self.consumer.try_consume_file(dst)
+        doc = self.consumer.try_consume_file(dst, "application/pdf")
 
         self._assert_first_last_send_progress()
 
@@ -639,7 +649,12 @@ class TestConsumer(DirectoriesMixin, FileSystemAssertsMixin, TestCase):
 
         dst = self.get_test_file()
         self.assertIsFile(dst)
-        self.assertRaises(ConsumerError, self.consumer.try_consume_file, dst)
+        self.assertRaises(
+            ConsumerError,
+            self.consumer.try_consume_file,
+            dst,
+            "application/pdf",
+        )
         self.assertIsNotFile(dst)
         self._assert_first_last_send_progress(last_status="FAILED")
 
@@ -647,14 +662,19 @@ class TestConsumer(DirectoriesMixin, FileSystemAssertsMixin, TestCase):
     def test_no_delete_duplicate(self):
         dst = self.get_test_file()
         self.assertIsFile(dst)
-        doc = self.consumer.try_consume_file(dst)
+        doc = self.consumer.try_consume_file(dst, "application/pdf")
 
         self.assertIsNotFile(dst)
         self.assertIsNotNone(doc)
 
         dst = self.get_test_file()
         self.assertIsFile(dst)
-        self.assertRaises(ConsumerError, self.consumer.try_consume_file, dst)
+        self.assertRaises(
+            ConsumerError,
+            self.consumer.try_consume_file,
+            dst,
+            "application/pdf",
+        )
         self.assertIsFile(dst)
 
         self._assert_first_last_send_progress(last_status="FAILED")
@@ -686,12 +706,15 @@ class TestConsumer(DirectoriesMixin, FileSystemAssertsMixin, TestCase):
         ]
         doc1 = self.consumer.try_consume_file(
             os.path.join(settings.CONSUMPTION_DIR, "simple.png"),
+            "image/png",
         )
         doc2 = self.consumer.try_consume_file(
             os.path.join(settings.CONSUMPTION_DIR, "simple.pdf"),
+            "application/pdf",
         )
         doc3 = self.consumer.try_consume_file(
             os.path.join(settings.CONSUMPTION_DIR, "simple.png.pdf"),
+            "application/pdf",
         )
 
         self.assertEqual(doc1.filename, "simple.png")
@@ -704,7 +727,7 @@ class TestConsumer(DirectoriesMixin, FileSystemAssertsMixin, TestCase):
         sanity_check()
 
 
-@mock.patch("documents.consumer.magic.from_file", fake_magic_from_file)
+@mock.patch("documents.data_models.magic.from_file", fake_magic_from_file)
 class TestConsumerCreatedDate(DirectoriesMixin, TestCase):
     def setUp(self):
         super().setUp()
@@ -734,7 +757,7 @@ class TestConsumerCreatedDate(DirectoriesMixin, TestCase):
         dst = os.path.join(self.dirs.scratch_dir, "sample.pdf")
         shutil.copy(src, dst)
 
-        document = self.consumer.try_consume_file(dst)
+        document = self.consumer.try_consume_file(dst, "application/pdf")
 
         self.assertEqual(
             document.created,
@@ -761,7 +784,7 @@ class TestConsumerCreatedDate(DirectoriesMixin, TestCase):
         dst = os.path.join(self.dirs.scratch_dir, "Scan - 2022-02-01.pdf")
         shutil.copy(src, dst)
 
-        document = self.consumer.try_consume_file(dst)
+        document = self.consumer.try_consume_file(dst, "application/pdf")
 
         self.assertEqual(
             document.created,
@@ -788,7 +811,7 @@ class TestConsumerCreatedDate(DirectoriesMixin, TestCase):
         dst = os.path.join(self.dirs.scratch_dir, "Scan - 2022-02-01.pdf")
         shutil.copy(src, dst)
 
-        document = self.consumer.try_consume_file(dst)
+        document = self.consumer.try_consume_file(dst, "application/pdf")
 
         self.assertEqual(
             document.created,
@@ -817,7 +840,7 @@ class TestConsumerCreatedDate(DirectoriesMixin, TestCase):
         dst = os.path.join(self.dirs.scratch_dir, "0000006.pdf")
         shutil.copy(src, dst)
 
-        document = self.consumer.try_consume_file(dst)
+        document = self.consumer.try_consume_file(dst, "application/pdf")
 
         self.assertEqual(
             document.created,

@@ -9,9 +9,9 @@ from subprocess import CompletedProcess
 from subprocess import run
 from typing import Optional
 
-import magic
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from channels_redis.pubsub import RedisPubSubChannelLayer
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import transaction
@@ -79,7 +79,7 @@ class Consumer(LoggingMixin):
         max_progress: int,
         status: ConsumerFilePhase,
         message: Optional[ConsumerStatusShortMessage] = None,
-        document_id=None,
+        document_id: Optional[int] = None,
     ):  # pragma: no cover
         payload = {
             "filename": os.path.basename(self.filename) if self.filename else None,
@@ -100,11 +100,12 @@ class Consumer(LoggingMixin):
         self,
         message: ConsumerStatusShortMessage,
         log_message: Optional[str] = None,
-        exc_info=None,
+        exc_info: Optional[bool] = None,
         exception: Optional[Exception] = None,
     ):
         self._send_progress(100, 100, ConsumerFilePhase.FAILED, message)
         self.log.error(log_message or message, exc_info=exc_info)
+        async_to_sync(self.channel_layer.flush)()
         raise ConsumerError(f"{self.filename}: {log_message or message}") from exception
 
     def __init__(self):
@@ -120,7 +121,7 @@ class Consumer(LoggingMixin):
         self.task_id = None
         self.override_owner_id = None
 
-        self.channel_layer = get_channel_layer()
+        self.channel_layer: RedisPubSubChannelLayer = get_channel_layer()
 
     def pre_check_file_exists(self):
         """
@@ -314,15 +315,17 @@ class Consumer(LoggingMixin):
     def try_consume_file(
         self,
         path: Path,
-        override_filename=None,
-        override_title=None,
-        override_correspondent_id=None,
-        override_document_type_id=None,
-        override_tag_ids=None,
-        task_id=None,
-        override_created=None,
-        override_asn=None,
-        override_owner_id=None,
+        mime_type: str,
+        *,
+        override_filename: Optional[str] = None,
+        override_title: Optional[str] = None,
+        override_correspondent_id: Optional[int] = None,
+        override_document_type_id: Optional[int] = None,
+        override_tag_ids: Optional[list[int]] = None,
+        task_id: Optional[uuid.uuid4] = None,
+        override_created: Optional[datetime.datetime] = None,
+        override_asn: Optional[int] = None,
+        override_owner_id: Optional[int] = None,
     ) -> Document:
         """
         Return the document object if it was successfully created.
@@ -365,8 +368,6 @@ class Consumer(LoggingMixin):
         copy_file_with_basic_stats(self.original_path, self.path)
 
         # Determine the parser class.
-
-        mime_type = magic.from_file(self.path, mime=True)
 
         self.log.debug(f"Detected mime type: {mime_type}")
 

@@ -41,13 +41,13 @@ logger = logging.getLogger("paperless.tasks")
 
 
 @shared_task
-def index_optimize():
+def index_optimize() -> None:
     ix = index.open_index()
     writer = AsyncWriter(ix)
     writer.commit(optimize=True)
 
 
-def index_reindex(progress_bar_disable=False):
+def index_reindex(progress_bar_disable=False) -> None:
     documents = Document.objects.all()
 
     ix = index.open_index(recreate=True)
@@ -58,7 +58,7 @@ def index_reindex(progress_bar_disable=False):
 
 
 @shared_task
-def train_classifier():
+def train_classifier() -> None:
     if (
         not Tag.objects.filter(matching_algorithm=Tag.MATCH_AUTO).exists()
         and not DocumentType.objects.filter(matching_algorithm=Tag.MATCH_AUTO).exists()
@@ -96,7 +96,7 @@ def consume_file(
     self: Task,
     input_doc: ConsumableDocument,
     overrides: Optional[DocumentMetadataOverrides] = None,
-):
+) -> str:
     def send_progress(status="SUCCESS", message="finished"):
         payload = {
             "filename": overrides.filename or input_doc.original_file.name,
@@ -156,6 +156,7 @@ def consume_file(
     # continue with consumption if no barcode was found
     document = Consumer().try_consume_file(
         input_doc.original_file,
+        input_doc.mime_type,
         override_filename=overrides.filename,
         override_title=overrides.title,
         override_correspondent_id=overrides.correspondent_id,
@@ -177,7 +178,7 @@ def consume_file(
 
 
 @shared_task
-def sanity_check():
+def sanity_check() -> str:
     messages = sanity_checker.check_sanity()
 
     messages.log_messages()
@@ -193,7 +194,7 @@ def sanity_check():
 
 
 @shared_task
-def bulk_update_documents(document_ids):
+def bulk_update_documents(document_ids) -> None:
     documents = Document.objects.filter(id__in=document_ids)
 
     ix = index.open_index()
@@ -207,7 +208,7 @@ def bulk_update_documents(document_ids):
 
 
 @shared_task
-def update_document_archive_file(document_id):
+def update_document_archive_file(document_id) -> None:
     """
     Re-creates the archive file of a document, including new OCR content and thumbnail
     """

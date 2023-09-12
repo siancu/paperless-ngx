@@ -11,10 +11,12 @@ from functools import lru_cache
 from pathlib import Path
 from re import Match
 from typing import Optional
+from uuid import UUID
 
 from django.conf import settings
 from django.utils import timezone
 
+from documents.data_models import SimpleProgressCallback
 from documents.loggers import LoggingMixin
 from documents.signals import document_consumer_declaration
 from documents.utils import copy_file_with_basic_stats
@@ -315,7 +317,11 @@ class DocumentParser(LoggingMixin):
 
     logging_name = "paperless.parsing"
 
-    def __init__(self, logging_group, progress_callback=None):
+    def __init__(
+        self,
+        logging_group: UUID,
+        progress_callback: Optional[SimpleProgressCallback] = None,
+    ):
         super().__init__()
         self.logging_group = logging_group
         os.makedirs(settings.SCRATCH_DIR, exist_ok=True)
