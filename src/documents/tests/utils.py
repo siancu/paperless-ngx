@@ -10,6 +10,7 @@ from os import PathLike
 from pathlib import Path
 from typing import Any
 from typing import Callable
+from typing import Optional
 from typing import Union
 from unittest import mock
 
@@ -277,8 +278,8 @@ class TestMigrations(TransactionTestCase):
     def app(self):
         return apps.get_containing_app_config(type(self).__module__).name
 
-    migrate_from = None
-    migrate_to = None
+    migrate_from: Optional[str] = None
+    migrate_to: Optional[str] = None
     auto_migrate = True
 
     def setUp(self):

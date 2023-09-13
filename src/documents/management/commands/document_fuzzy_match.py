@@ -44,7 +44,7 @@ def _process_and_match(work: _WorkPackage) -> _WorkResult:
 class Command(BaseCommand):
     help = "Searches for documents where the content almost matches"
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser) -> None:
         parser.add_argument(
             "--ratio",
             default=85.0,
@@ -64,7 +64,7 @@ class Command(BaseCommand):
             help="If set, the progress bar will not be shown",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options) -> None:
         RATIO_MIN: Final[float] = 0.0
         RATIO_MAX: Final[float] = 100.0
 

@@ -31,7 +31,7 @@ except ImportError:  # pragma: nocover
 logger = logging.getLogger("paperless.management.consumer")
 
 
-def _tags_from_path(filepath) -> set[Tag]:
+def _tags_from_path(filepath) -> set[int]:
     """
     Walk up the directory tree from filepath to CONSUMPTION_DIR
     and get or create Tag IDs for every directory.
@@ -128,7 +128,7 @@ def _consume(filepath: str) -> None:
         consume_file.delay(
             ConsumableDocument(
                 source=DocumentSource.ConsumeFolder,
-                original_file=filepath,
+                original_file=Path(filepath),
             ),
             DocumentMetadataOverrides(tag_ids=tag_ids),
         )

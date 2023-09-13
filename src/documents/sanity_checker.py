@@ -2,7 +2,6 @@ import hashlib
 import logging
 from collections import defaultdict
 from pathlib import Path
-from typing import Final
 
 from django.conf import settings
 from tqdm import tqdm
@@ -70,7 +69,7 @@ def check_sanity(progress=False) -> SanityCheckMessages:
 
     for doc in tqdm(Document.objects.all(), disable=not progress):
         # Check sanity of the thumbnail
-        thumbnail_path: Final[Path] = Path(doc.thumbnail_path).resolve()
+        thumbnail_path = Path(doc.thumbnail_path).resolve()
         if not thumbnail_path.exists() or not thumbnail_path.is_file():
             messages.error(doc.pk, "Thumbnail of document does not exist.")
         else:
@@ -83,7 +82,7 @@ def check_sanity(progress=False) -> SanityCheckMessages:
 
         # Check sanity of the original file
         # TODO: extract method
-        source_path: Final[Path] = Path(doc.source_path).resolve()
+        source_path = Path(doc.source_path).resolve()
         if not source_path.exists() or not source_path.is_file():
             messages.error(doc.pk, "Original of document does not exist.")
         else:
@@ -113,7 +112,7 @@ def check_sanity(progress=False) -> SanityCheckMessages:
                 "Document has an archive file, but its checksum is missing.",
             )
         elif doc.has_archive_version:
-            archive_path: Final[Path] = Path(doc.archive_path).resolve()
+            archive_path = Path(doc.archive_path).resolve()
             if not archive_path.exists() or not archive_path.is_file():
                 messages.error(doc.pk, "Archived version of document does not exist.")
             else:

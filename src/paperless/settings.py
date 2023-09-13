@@ -96,7 +96,7 @@ def __get_list(
         return []
 
 
-def _parse_redis_url(env_redis: Optional[str]) -> tuple[str]:
+def _parse_redis_url(env_redis: Optional[str]) -> tuple[str, str]:
     """
     Gets the Redis information from the environment or a default and handles
     converting from incompatible django_channels and celery formats.
