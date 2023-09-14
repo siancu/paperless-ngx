@@ -834,7 +834,7 @@ class PreConsumeTestCase(TestCase):
 
         return super().setUp()
 
-    @mock.patch("documents.consumer.run")
+    @mock.patch("documents.consumer.run_process_with_capture")
     @override_settings(PRE_CONSUME_SCRIPT=None)
     def test_no_pre_consume_script(self, m):
         c = Consumer()
@@ -842,7 +842,7 @@ class PreConsumeTestCase(TestCase):
         c.run_pre_consume_script()
         m.assert_not_called()
 
-    @mock.patch("documents.consumer.run")
+    @mock.patch("documents.consumer.run_process_with_capture")
     @mock.patch("documents.consumer.Consumer._send_progress")
     @override_settings(PRE_CONSUME_SCRIPT="does-not-exist")
     def test_pre_consume_script_not_found(self, m, m2):
@@ -851,7 +851,7 @@ class PreConsumeTestCase(TestCase):
         c.path = "path-to-file"
         self.assertRaises(ConsumerError, c.run_pre_consume_script)
 
-    @mock.patch("documents.consumer.run")
+    @mock.patch("documents.consumer.run_process_with_capture")
     def test_pre_consume_script(self, m):
         with tempfile.NamedTemporaryFile() as script:
             with override_settings(PRE_CONSUME_SCRIPT=script.name):
@@ -865,7 +865,7 @@ class PreConsumeTestCase(TestCase):
 
                 args, kwargs = m.call_args
 
-                command = kwargs["args"]
+                command = args[0]
                 environment = kwargs["env"]
 
                 self.assertEqual(command[0], script.name)
@@ -899,13 +899,13 @@ class PreConsumeTestCase(TestCase):
             os.chmod(script.name, st.st_mode | stat.S_IEXEC)
 
             with override_settings(PRE_CONSUME_SCRIPT=script.name):
-                with self.assertLogs("paperless.consumer", level="INFO") as cm:
+                with self.assertLogs("paperless.consumer", level="DEBUG") as cm:
                     c = Consumer()
                     c.path = "path-to-file"
 
                     c.run_pre_consume_script()
                     self.assertIn(
-                        "INFO:paperless.consumer:This message goes to stdout",
+                        "DEBUG:paperless.consumer:This message goes to stdout",
                         cm.output,
                     )
                     self.assertIn(
@@ -950,7 +950,7 @@ class PostConsumeTestCase(TestCase):
 
         return super().setUp()
 
-    @mock.patch("documents.consumer.run")
+    @mock.patch("documents.consumer.run_process_with_capture")
     @override_settings(POST_CONSUME_SCRIPT=None)
     def test_no_post_consume_script(self, m):
         doc = Document.objects.create(title="Test", mime_type="application/pdf")
@@ -975,7 +975,7 @@ class PostConsumeTestCase(TestCase):
             doc,
         )
 
-    @mock.patch("documents.consumer.run")
+    @mock.patch("documents.consumer.run_process_with_capture")
     def test_post_consume_script_simple(self, m):
         with tempfile.NamedTemporaryFile() as script:
             with override_settings(POST_CONSUME_SCRIPT=script.name):
@@ -985,7 +985,7 @@ class PostConsumeTestCase(TestCase):
 
                 m.assert_called_once()
 
-    @mock.patch("documents.consumer.run")
+    @mock.patch("documents.consumer.run_process_with_capture")
     def test_post_consume_script_with_correspondent(self, m):
         with tempfile.NamedTemporaryFile() as script:
             with override_settings(POST_CONSUME_SCRIPT=script.name):
@@ -1006,9 +1006,9 @@ class PostConsumeTestCase(TestCase):
 
                 m.assert_called_once()
 
-                _, kwargs = m.call_args
+                args, kwargs = m.call_args
 
-                command = kwargs["args"]
+                command = args[0]
                 environment = kwargs["env"]
 
                 self.assertEqual(command[0], script.name)

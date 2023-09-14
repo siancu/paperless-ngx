@@ -1,7 +1,6 @@
 import json
 import os
 import re
-import subprocess
 import tempfile
 from pathlib import Path
 from typing import Optional
@@ -12,6 +11,7 @@ from PIL import Image
 from documents.parsers import DocumentParser
 from documents.parsers import ParseError
 from documents.parsers import make_thumbnail_from_pdf
+from documents.utils import run_process_with_capture
 
 
 class NoTextFoundException(Exception):
@@ -81,7 +81,7 @@ class RasterisedDocumentParser(DocumentParser):
             return im.mode in ("RGBA", "LA")
 
     def remove_alpha(self, image_path: str):
-        subprocess.run(
+        run_process_with_capture(
             [
                 settings.CONVERT_BINARY,
                 "-alpha",
@@ -89,6 +89,11 @@ class RasterisedDocumentParser(DocumentParser):
                 image_path,
                 image_path,
             ],
+            self.log,
+            check_return=False,
+            log_return=False,
+            log_stderr=False,
+            log_stdout=False,
         )
 
     def get_dpi(self, image):
@@ -142,7 +147,7 @@ class RasterisedDocumentParser(DocumentParser):
                 mode="w+",
                 dir=self.tempdir,
             ) as tmp:
-                subprocess.run(
+                run_process_with_capture(
                     [
                         "pdftotext",
                         "-q",
@@ -152,6 +157,11 @@ class RasterisedDocumentParser(DocumentParser):
                         pdf_file,
                         tmp.name,
                     ],
+                    self.log,
+                    check_return=False,
+                    log_return=False,
+                    log_stderr=False,
+                    log_stdout=False,
                 )
                 text = self.read_file_handle_unicode_errors(Path(tmp.name))
 
