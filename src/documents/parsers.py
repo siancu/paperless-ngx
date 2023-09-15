@@ -11,6 +11,7 @@ from functools import lru_cache
 from pathlib import Path
 from re import Match
 from typing import Optional
+from typing import Union
 from uuid import UUID
 
 from django.conf import settings
@@ -319,7 +320,7 @@ class DocumentParser(LoggingMixin):
 
     def __init__(
         self,
-        logging_group: Optional[UUID],
+        logging_group: Optional[UUID] = None,
         progress_callback: Optional[SimpleProgressCallback] = None,
     ):
         super().__init__()
@@ -332,7 +333,11 @@ class DocumentParser(LoggingMixin):
         self.date: Optional[datetime.datetime] = None
         self.progress_callback = progress_callback
 
-    def progress(self, current_progress, max_progress):
+    def progress(
+        self,
+        current_progress: Union[float, int],
+        max_progress: Union[float, int],
+    ):
         if self.progress_callback:
             self.progress_callback(current_progress, max_progress)
 

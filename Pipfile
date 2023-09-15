@@ -3,7 +3,6 @@ url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [packages]
 dateparser = "~=1.1"
 # WARNING: django does not use semver.
@@ -90,3 +89,4 @@ types-Pygments = "*"
 types-colorama = "*"
 types-psycopg2 = "*"
 types-setuptools = "*"
+typing-extensions = "*"

@@ -162,7 +162,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: backend-coverage-report
-          path: src/coverage.xml
+          path: src/coverage.json
           retention-days: 7
           if-no-files-found: warn
       -

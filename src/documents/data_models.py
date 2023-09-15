@@ -64,6 +64,10 @@ class ConsumableDocument:
 
 
 class SimpleProgressCallback(Protocol):
+    """
+    Defines the protocol for a DocumentParser progress callback function
+    """
+
     def __call__(
         self,
         current_progress: Union[float, int],
