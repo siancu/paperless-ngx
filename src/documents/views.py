@@ -85,6 +85,7 @@ from .matching import match_correspondents
 from .matching import match_document_types
 from .matching import match_storage_paths
 from .matching import match_tags
+from .models import ConsumptionTemplate
 from .models import Correspondent
 from .models import Document
 from .models import DocumentType
@@ -99,6 +100,7 @@ from .parsers import parse_date_generator
 from .serialisers import AcknowledgeTasksViewSerializer
 from .serialisers import BulkDownloadSerializer
 from .serialisers import BulkEditSerializer
+from .serialisers import ConsumptionTemplateSerializer
 from .serialisers import CorrespondentSerializer
 from .serialisers import DocumentListSerializer
 from .serialisers import DocumentSerializer
@@ -1205,3 +1207,13 @@ def serve_file(doc: Document, use_archive: bool, disposition: str):
     )
     response["Content-Disposition"] = content_disposition
     return response
+
+
+class ConsumptionTemplateViewSet(ModelViewSet, PassUserMixin):
+    model = ConsumptionTemplate
+
+    queryset = ConsumptionTemplate.objects.all().order_by("order")
+    serializer_class = ConsumptionTemplateSerializer
+    pagination_class = StandardPagination
+    permission_classes = (IsAuthenticated, PaperlessObjectPermissions)
+    filter_backends = (ObjectOwnedOrGrantedPermissionsFilter,)
