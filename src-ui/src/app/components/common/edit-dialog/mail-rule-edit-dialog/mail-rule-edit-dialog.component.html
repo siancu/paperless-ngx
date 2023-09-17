@@ -21,16 +21,13 @@
         <pngx-input-text i18n-title title="Filter to" formControlName="filter_to" [error]="error?.filter_to"></pngx-input-text>
         <pngx-input-text i18n-title title="Filter subject" formControlName="filter_subject" [error]="error?.filter_subject"></pngx-input-text>
         <pngx-input-text i18n-title title="Filter body" formControlName="filter_body" [error]="error?.filter_body"></pngx-input-text>
-        <pngx-input-text i18n-title title="Filter attachment filename" formControlName="filter_attachment_filename" i18n-hint hint="Only consume documents which entirely match this filename if specified. Wildcards such as *.pdf or *invoice* are allowed. Case insensitive." [error]="error?.filter_attachment_filename"></pngx-input-text>
+        <p class="small" i18n>File name filters are specified in the consumption template.</p>
       </div>
       <div class="col">
         <pngx-input-select i18n-title title="Action" [items]="actionOptions" formControlName="action" i18n-hint hint="Action is only performed when documents are consumed from the mail. Mails without attachments remain entirely untouched."></pngx-input-select>
         <pngx-input-text i18n-title title="Action parameter" *ngIf="showActionParamField" formControlName="action_parameter" [error]="error?.action_parameter"></pngx-input-text>
         <pngx-input-select i18n-title title="Assign title from" [items]="metadataTitleOptions" formControlName="assign_title_from"></pngx-input-select>
-        <pngx-input-tags [allowCreate]="false" formControlName="assign_tags"></pngx-input-tags>
-        <pngx-input-select i18n-title title="Assign document type" [items]="documentTypes" [allowNull]="true" formControlName="assign_document_type"></pngx-input-select>
-        <pngx-input-select i18n-title title="Assign correspondent from" [items]="metadataCorrespondentOptions" formControlName="assign_correspondent_from"></pngx-input-select>
-        <pngx-input-select *ngIf="showCorrespondentField" i18n-title title="Assign correspondent" [items]="correspondents" [allowNull]="true" formControlName="assign_correspondent"></pngx-input-select>
+        <pngx-input-select i18n-title title="Consumption template(s)" [items]="templates" [multiple]="true" formControlName="consumption_templates"></pngx-input-select>
       </div>
     </div>
   </div>

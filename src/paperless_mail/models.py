@@ -87,7 +87,7 @@ class MailRule(document_models.ModelWithOwner):
         FROM_NOTHING = 1, _("Do not assign a correspondent")
         FROM_EMAIL = 2, _("Use mail address")
         FROM_NAME = 3, _("Use name (or mail address if not available)")
-        FROM_CUSTOM = 4, _("Use correspondent selected below")
+        FROM_TEMPLATE = 4, _("Use correspondent from consumption template")
 
     name = models.CharField(_("name"), max_length=256, unique=True)
 
@@ -138,18 +138,6 @@ class MailRule(document_models.ModelWithOwner):
         blank=True,
     )
 
-    filter_attachment_filename = models.CharField(
-        _("filter attachment filename"),
-        max_length=256,
-        null=True,
-        blank=True,
-        help_text=_(
-            "Only consume documents which entirely match this "
-            "filename if specified. Wildcards such as *.pdf or "
-            "*invoice* are allowed. Case insensitive.",
-        ),
-    )
-
     maximum_age = models.PositiveIntegerField(
         _("maximum age"),
         default=30,
@@ -197,32 +185,17 @@ class MailRule(document_models.ModelWithOwner):
         default=TitleSource.FROM_SUBJECT,
     )
 
-    assign_tags = models.ManyToManyField(
-        document_models.Tag,
+    consumption_templates = models.ManyToManyField(
+        document_models.ConsumptionTemplate,
         blank=True,
-        verbose_name=_("assign this tag"),
-    )
-
-    assign_document_type = models.ForeignKey(
-        document_models.DocumentType,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        verbose_name=_("assign this document type"),
+        related_name="+",
+        verbose_name=_("Consumption template(s)"),
     )
 
     assign_correspondent_from = models.PositiveIntegerField(
         _("assign correspondent from"),
         choices=CorrespondentSource.choices,
         default=CorrespondentSource.FROM_NOTHING,
-    )
-
-    assign_correspondent = models.ForeignKey(
-        document_models.Correspondent,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        verbose_name=_("assign this correspondent"),
     )
 
     def __str__(self):

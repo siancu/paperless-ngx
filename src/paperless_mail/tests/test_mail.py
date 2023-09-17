@@ -368,7 +368,7 @@ class TestMail(
 
         rule = MailRule(
             name="d",
-            assign_correspondent_from=MailRule.CorrespondentSource.FROM_CUSTOM,
+            assign_correspondent_from=MailRule.CorrespondentSource.FROM_TEMPLATE,
             assign_correspondent=someone_else,
         )
         c = handler._get_correspondent(message, rule)

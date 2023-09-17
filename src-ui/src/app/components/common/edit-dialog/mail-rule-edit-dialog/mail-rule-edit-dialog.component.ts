@@ -3,6 +3,7 @@ import { FormControl, FormGroup } from '@angular/forms'
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap'
 import { first } from 'rxjs'
 import { EditDialogComponent } from 'src/app/components/common/edit-dialog/edit-dialog.component'
+import { PaperlessConsumptionTemplate } from 'src/app/data/paperless-consumption-template'
 import { PaperlessCorrespondent } from 'src/app/data/paperless-correspondent'
 import { PaperlessDocumentType } from 'src/app/data/paperless-document-type'
 import { PaperlessMailAccount } from 'src/app/data/paperless-mail-account'
@@ -14,8 +15,7 @@ import {
   PaperlessMailRule,
   MailRuleConsumptionScope,
 } from 'src/app/data/paperless-mail-rule'
-import { CorrespondentService } from 'src/app/services/rest/correspondent.service'
-import { DocumentTypeService } from 'src/app/services/rest/document-type.service'
+import { ConsumptionTemplateService } from 'src/app/services/rest/consumption-template.service'
 import { MailAccountService } from 'src/app/services/rest/mail-account.service'
 import { MailRuleService } from 'src/app/services/rest/mail-rule.service'
 import { UserService } from 'src/app/services/rest/user.service'
@@ -95,8 +95,8 @@ const METADATA_CORRESPONDENT_OPTIONS = [
     name: $localize`Use name (or mail address if not available)`,
   },
   {
-    id: MailMetadataCorrespondentOption.FromCustom,
-    name: $localize`Use correspondent selected below`,
+    id: MailMetadataCorrespondentOption.FromTemplate,
+    name: $localize`Use correspondent in the consumption template`,
   },
 ]
 
@@ -107,17 +107,15 @@ const METADATA_CORRESPONDENT_OPTIONS = [
 })
 export class MailRuleEditDialogComponent extends EditDialogComponent<PaperlessMailRule> {
   accounts: PaperlessMailAccount[]
-  correspondents: PaperlessCorrespondent[]
-  documentTypes: PaperlessDocumentType[]
+  templates: PaperlessConsumptionTemplate[]
 
   constructor(
     service: MailRuleService,
     activeModal: NgbActiveModal,
     accountService: MailAccountService,
-    correspondentService: CorrespondentService,
-    documentTypeService: DocumentTypeService,
     userService: UserService,
-    settingsService: SettingsService
+    settingsService: SettingsService,
+    consumptionTemplateService: ConsumptionTemplateService
   ) {
     super(service, activeModal, userService, settingsService)
 
@@ -126,15 +124,10 @@ export class MailRuleEditDialogComponent extends EditDialogComponent<PaperlessMa
       .pipe(first())
       .subscribe((result) => (this.accounts = result.results))
 
-    correspondentService
+    consumptionTemplateService
       .listAll()
       .pipe(first())
-      .subscribe((result) => (this.correspondents = result.results))
-
-    documentTypeService
-      .listAll()
-      .pipe(first())
-      .subscribe((result) => (this.documentTypes = result.results))
+      .subscribe((result) => (this.templates = result.results))
   }
 
   getCreateTitle() {
@@ -154,7 +147,6 @@ export class MailRuleEditDialogComponent extends EditDialogComponent<PaperlessMa
       filter_to: new FormControl(null),
       filter_subject: new FormControl(null),
       filter_body: new FormControl(null),
-      filter_attachment_filename: new FormControl(null),
       maximum_age: new FormControl(null),
       attachment_type: new FormControl(MailFilterAttachmentType.Attachments),
       consumption_scope: new FormControl(MailRuleConsumptionScope.Attachments),
@@ -162,20 +154,11 @@ export class MailRuleEditDialogComponent extends EditDialogComponent<PaperlessMa
       action: new FormControl(MailAction.MarkRead),
       action_parameter: new FormControl(null),
       assign_title_from: new FormControl(MailMetadataTitleOption.FromSubject),
-      assign_tags: new FormControl([]),
-      assign_document_type: new FormControl(null),
       assign_correspondent_from: new FormControl(
         MailMetadataCorrespondentOption.FromNothing
       ),
-      assign_correspondent: new FormControl(null),
+      consumption_templates: new FormControl([]),
     })
-  }
-
-  get showCorrespondentField(): boolean {
-    return (
-      this.objectForm?.get('assign_correspondent_from')?.value ==
-      MailMetadataCorrespondentOption.FromCustom
-    )
   }
 
   get showActionParamField(): boolean {

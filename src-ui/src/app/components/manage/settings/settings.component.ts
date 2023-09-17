@@ -437,16 +437,13 @@ export class SettingsComponent
           filter_to: rule.filter_to,
           filter_subject: rule.filter_subject,
           filter_body: rule.filter_body,
-          filter_attachment_filename: rule.filter_attachment_filename,
           maximum_age: rule.maximum_age,
           attachment_type: rule.attachment_type,
           action: rule.action,
           action_parameter: rule.action_parameter,
           assign_title_from: rule.assign_title_from,
-          assign_tags: rule.assign_tags,
-          assign_document_type: rule.assign_document_type,
           assign_correspondent_from: rule.assign_correspondent_from,
-          assign_correspondent: rule.assign_correspondent,
+          consumption_templates: rule.consumption_templates,
         }
         this.mailRuleGroup.addControl(
           rule.id.toString(),
@@ -458,16 +455,13 @@ export class SettingsComponent
             filter_to: new FormControl(null),
             filter_subject: new FormControl(null),
             filter_body: new FormControl(null),
-            filter_attachment_filename: new FormControl(null),
             maximum_age: new FormControl(null),
             attachment_type: new FormControl(null),
             action: new FormControl(null),
             action_parameter: new FormControl(null),
             assign_title_from: new FormControl(null),
-            assign_tags: new FormControl(null),
-            assign_document_type: new FormControl(null),
             assign_correspondent_from: new FormControl(null),
-            assign_correspondent: new FormControl(null),
+            consumption_templates: new FormControl(null),
           })
         )
       }

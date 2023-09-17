@@ -25,9 +25,6 @@ import {
 describe('MailRuleEditDialogComponent', () => {
   let component: MailRuleEditDialogComponent
   let fixture: ComponentFixture<MailRuleEditDialogComponent>
-  let accountService: MailAccountService
-  let correspondentService: CorrespondentService
-  let documentTypeService: DocumentTypeService
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
@@ -94,7 +91,7 @@ describe('MailRuleEditDialogComponent', () => {
     expect(component.showCorrespondentField).toBeFalsy()
     component.objectForm
       .get('assign_correspondent_from')
-      .setValue(MailMetadataCorrespondentOption.FromCustom)
+      .setValue(MailMetadataCorrespondentOption.FromTemplate)
     expect(component.showCorrespondentField).toBeTruthy()
 
     expect(component.showActionParamField).toBeFalsy()

@@ -457,7 +457,7 @@ class MailAccountHandler(LoggingMixin):
             else:
                 return self._correspondent_from_name(message.from_)
 
-        elif c_from == MailRule.CorrespondentSource.FROM_CUSTOM:
+        elif c_from == MailRule.CorrespondentSource.FROM_TEMPLATE:
             return rule.assign_correspondent
 
         else:
