@@ -94,6 +94,8 @@ ARG RUNTIME_PACKAGES="\
   zlib1g \
   # Barcode splitter
   libzbar0 \
+  libvips \
+  libvips-tools \
   poppler-utils"
 
 # Install basic runtime packages.
@@ -194,6 +196,7 @@ ARG BUILD_PACKAGES="\
   libpq-dev \
   # https://github.com/PyMySQL/mysqlclient#linux
   default-libmysqlclient-dev \
+  libvips-dev \
   pkg-config"
 
 # hadolint ignore=DL3042
